@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Person.dart';
+import 'Profile.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -12,50 +13,58 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-  class _MyHomePageState extends State<MyHomePage> {
-  final List<Person> persone = [
-  Person(nome: "Maria", cognome: "Labanca", imagePath: "assets/profile_images/maria.png", status: "Fuori residenza"),
-  Person(nome: "Sofia", cognome: "Miglionico", imagePath: "assets/profile_images/sofia.png", status: "Fuori residenza"),
-  Person(nome: "Nicol", cognome: "Goranova", imagePath: "assets/profile_images/nicol.png", status: "Fuori residenza"),
+class _MyHomePageState extends State<MyHomePage> {
+  final List<Person> people = [
+    Person(
+      nome: "Maria",
+      cognome: "Labanca",
+      imagePath: "assets/profile_images/maria.png",
+      status: "Fuori residenza",
+    ),
+    Person(
+      nome: "Sofia",
+      cognome: "Miglionico",
+      imagePath: "assets/profile_images/sofia.png",
+      status: "Fuori residenza",
+    ),
+    Person(
+      nome: "Nicol",
+      cognome: "Goranova",
+      imagePath: "assets/profile_images/nicol.png",
+      status: "Fuori residenza",
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
-        title: Center(child: Text(widget.title)),
+        title: Row(
+          children: [
+            Expanded(child: Center(child: Text(widget.title))),
+          ],
+        ),
       ),
-      body: ListView(
-        children: const <Widget>[
-          ListTile(
-            leading: CircleAvatar(
-              backgroundImage: AssetImage("assets/profile_images/maria.png"),
-            ),
-            title: Text('Maria Labanca'),
-            subtitle: Text('Fuori residenza'),
-            trailing: Icon(Icons.remove),
-          ),
-          Divider(height: 0),
-          ListTile(
-            leading: CircleAvatar(
-              backgroundImage: AssetImage("assets/profile_images/sofia.png"),
-            ),
-            title: Text('Sofia Miglionico'),
-            subtitle: Text('Fuori residenza'),
-            trailing: Icon(Icons.remove),
-          ),
-          Divider(height: 0),
-          ListTile(
-            leading: CircleAvatar(
-              backgroundImage: AssetImage("assets/profile_images/nicol.png"),
-            ),
-            title: Text('Nicol Goranova'),
-            subtitle: Text('Fuori residenza'),
-            trailing: Icon(Icons.remove),
-          ),
-        ],
+      endDrawer: buildDrawer(context),
+      body: ListView.builder(
+        itemCount: people.length,
+        itemBuilder: (context, index) {
+          final person = people[index];
+          return Column(
+            children: [
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: AssetImage(person.imagePath),
+                ),
+                title: Text('${person.nome} ${person.cognome}'),
+                subtitle: Text(person.status),
+                trailing: Icon(Icons.remove),
+              ),
+              Divider(height: 0),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -64,6 +73,50 @@ class MyHomePage extends StatefulWidget {
         tooltip: 'aggiungi una persona',
         child: const Icon(Icons.add),
       ), // Rimuovi la parentesi graffa extra qui
+    );
+  }
+
+  /// Funzione per creare il Drawer
+  Widget buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Colors.blue),
+            child: CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage("assets/profile_images/dario.png"),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Home'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Profilo'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => Profile(title: widget.title,)))
+              ;
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Impostazioni'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
     );
   }
 

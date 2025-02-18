@@ -1,18 +1,31 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'Person.dart';
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
 
   @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+  class _MyHomePageState extends State<MyHomePage> {
+  final List<Person> persone = [
+  Person(nome: "Maria", cognome: "Labanca", imagePath: "assets/profile_images/maria.png", status: "Fuori residenza"),
+  Person(nome: "Sofia", cognome: "Miglionico", imagePath: "assets/profile_images/sofia.png", status: "Fuori residenza"),
+  Person(nome: "Nicol", cognome: "Goranova", imagePath: "assets/profile_images/nicol.png", status: "Fuori residenza"),
+  ];
+
+  @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
-        title: Center(child: Text(title)),
+        title: Center(child: Text(widget.title)),
       ),
       body: ListView(
         children: const <Widget>[

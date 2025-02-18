@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -16,7 +15,34 @@ class MyHomePage extends StatelessWidget {
         title: Center(child: Text(title)),
       ),
       body: ListView(
-
+        children: const <Widget>[
+          ListTile(
+            leading: CircleAvatar(
+              backgroundImage: AssetImage("assets/profile_images/maria.png"),
+            ),
+            title: Text('Maria Labanca'),
+            subtitle: Text('Fuori residenza'),
+            trailing: Icon(Icons.remove),
+          ),
+          Divider(height: 0),
+          ListTile(
+            leading: CircleAvatar(
+              backgroundImage: AssetImage("assets/profile_images/sofia.png"),
+            ),
+            title: Text('Sofia Miglionico'),
+            subtitle: Text('Fuori residenza'),
+            trailing: Icon(Icons.remove),
+          ),
+          Divider(height: 0),
+          ListTile(
+            leading: CircleAvatar(
+              backgroundImage: AssetImage("assets/profile_images/nicol.png"),
+            ),
+            title: Text('Nicol Goranova'),
+            subtitle: Text('Fuori residenza'),
+            trailing: Icon(Icons.remove),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

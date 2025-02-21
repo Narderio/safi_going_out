@@ -7,31 +7,24 @@ import 'package:image_picker/image_picker.dart';
 import 'package:safi_going_out/model/GetUserProfile.dart';
 
 class Profile extends StatefulWidget {
-  const Profile({super.key, required this.title});
-
+  Profile({super.key, required this.title, required this.user});
   final String title;
+  final GetUserProfile user;
 
   @override
   _ProfileState createState() => _ProfileState();
 }
 
 class _ProfileState extends State<Profile> {
+  late GetUserProfile user; // Dichiarazione di user come variabile di stato
+
   @override
   void initState() {
     super.initState();
-    getUser(); // Carica il profilo all'apertura della schermata
+    user = widget.user; // Inizializza user dal widget
   }
 
-  GetUserProfile user = GetUserProfile(
-    id: 0,
-    name: '',
-    surname: '',
-    email: '',
-    role: '',
-    image: '',
-  );
-
-  // Funzione per mostrare il dialogo di modifica del nome
+  // Funzione per mostrare il dialogo di modifica dell'email
   void _editEmail() {
     TextEditingController controller = TextEditingController(text: user.email);
 
@@ -56,7 +49,7 @@ class _ProfileState extends State<Profile> {
             TextButton(
               onPressed: () async {
                 String newEmail =
-                    controller.text.trim(); // Rimuove gli spazi bianchi
+                controller.text.trim(); // Rimuove gli spazi bianchi
 
                 if (newEmail.isEmpty) {
                   Navigator.of(context).pop();
@@ -68,8 +61,7 @@ class _ProfileState extends State<Profile> {
 
                 try {
                   final response = await http.patch(
-                    Uri.parse('http://10.0.2.2:8080/updateEmail'),
-                    // URL corretto
+                    Uri.parse('http://10.0.2.2:8080/all/updateEmail'),
                     headers: <String, String>{
                       'Content-Type': 'application/json; charset=UTF-8',
                     },
@@ -201,32 +193,6 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Future<void> getUser() async {
-    int userId = 3; // ID dell'utente corrente
-    user.id = userId;
-    final response = await http.post(
-      Uri.parse('http://10.0.2.2:8080/getUserById'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, int>{'id': userId}),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        user = GetUserProfile.fromJson(jsonDecode(response.body));
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Errore nel caricamento dell'utente: ${response.statusCode}",
-          ),
-        ),
-      );
-    }
-  }
-
   Future<void> updateImage() async {
     final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -237,7 +203,7 @@ class _ProfileState extends State<Profile> {
       String base64Image = base64Encode(imageBytes); // Converte in Base64
 
       final response = await http.patch(
-        Uri.parse('http://10.0.2.2:8080/updateImage'),
+        Uri.parse('http://10.0.2.2:8080/all/updateImage'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -246,11 +212,11 @@ class _ProfileState extends State<Profile> {
           'image': base64Image, // Aggiungi l'immagine codificata in base64
         }),
       );
-    if (response.statusCode == 200) {
-      setState(() {
-        user.image = base64Image; // Aggiorna l'immagine dell'utente
-      });
-    }
+      if (response.statusCode == 200) {
+        setState(() {
+          user.image = base64Image; // Aggiorna l'immagine dell'utente
+        });
+      }
     }
   }
 }

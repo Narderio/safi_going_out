@@ -30,5 +30,7 @@ public interface UserService{
 
     public Boolean updateImage(@Valid UpdateImageRequest request);
 
-    public Boolean login(@Valid LoginRequest request);
+    public User login(@Valid LoginRequest request);
+
+    public User getUserByEmail(String email);
 }

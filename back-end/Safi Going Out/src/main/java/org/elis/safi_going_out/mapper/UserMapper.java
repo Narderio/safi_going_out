@@ -2,6 +2,7 @@ package org.elis.safi_going_out.mapper;
 
 import org.elis.safi_going_out.dto.response.GetUserProfile;
 import org.elis.safi_going_out.dto.response.GetUsersResponse;
+import org.elis.safi_going_out.dto.response.LoginResponse;
 import org.elis.safi_going_out.model.User;
 import org.springframework.stereotype.Component;
 
@@ -41,4 +42,5 @@ public class UserMapper {
             response.setImage(user.getImage());
         return response;
     }
+
 }

@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:safi_going_out/model/GetUserProfile.dart';
+import 'package:safi_going_out/security/Security.dart';
 import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -15,13 +16,14 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       String email = _emailController.text;
       String password = _passwordController.text;
       // Qui puoi gestire la logica di autenticazione
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/login'),
+        Uri.parse('http://10.0.2.2:8080/all/login'),
         // URL corretto
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -32,6 +34,8 @@ class _LoginPageState extends State<LoginPage> {
         }),
       );
       if (response.statusCode == 200) {
+        String token=response.body;
+        Security().saveToken(token);
         // Se l'autenticazione è andata a buon fine, naviga alla pagina successiva
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -117,3 +121,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+

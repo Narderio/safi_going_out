@@ -13,6 +13,7 @@ import org.elis.safi_going_out.service.definition.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -35,8 +36,8 @@ public class UserServiceImpl implements UserService {
         if(user != null)
             throw new BadRequestException("Utente già registrato");
 
-        User user2 = userRepository.getUserByEmail(request.getEmail());
-        if(user2 != null)
+        Optional<User> user2 = userRepository.getUserByEmail(request.getEmail());
+        if(user2.isPresent())
             throw new BadRequestException("Email già registrata");
 
         User user1 = new User(request.getMatricola(), request.getEmail(), request.getPassword(), request.getName(), request.getSurname(), request.getRole());
@@ -59,8 +60,8 @@ public class UserServiceImpl implements UserService {
         if(user != null)
             throw new BadRequestException("Utente già registrato");
 
-        User user2 = userRepository.getUserByEmail(request.getEmail());
-        if(user2 != null)
+        Optional<User> user2 = userRepository.getUserByEmail(request.getEmail());
+        if(user2.isPresent())
             throw new BadRequestException("Email già registrata");
 
         String password = "password";
@@ -136,15 +137,23 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-    public Boolean login(@Valid LoginRequest request){
-        User user = userRepository.getUserByEmail(request.getEmail());
-        if(user == null)
+    public User login(@Valid LoginRequest request){
+        Optional<User> user = userRepository.getUserByEmail(request.getEmail());
+        if(user.isEmpty())
             throw new BadRequestException("Utente non trovato");
 
-        if(!user.getPassword().equals(request.getPassword()))
+        if(!user.get().getPassword().equals(request.getPassword()))
             throw new BadRequestException("Password errata");
 
-        return true;
+        return user.get();
+    }
+
+    public User getUserByEmail(String email){
+        Optional<User> user = userRepository.getUserByEmail(email);
+        if(user.isEmpty())
+            throw new BadRequestException("Utente non trovato");
+
+        return user.get();
     }
 
 

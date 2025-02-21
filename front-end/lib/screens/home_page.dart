@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:safi_going_out/model/GetUserProfile.dart';
+import 'package:safi_going_out/screens/LoginPage.dart';
 import 'package:safi_going_out/screens/manage_users.dart';
 import '../model/UserList.dart';
+import '../security/Security.dart';
 import 'Profile.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -17,20 +21,63 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<UserList> users = [];
+  GetUserProfile user = GetUserProfile(
+    id: 0,
+    name: '',
+    surname: '',
+    email: '',
+    role: '',
+    image: '',
+  );
 
   @override
   void initState() {
     super.initState();
-    fetchUsers(); // Chiama l'API all'avvio
+    // Chiama la funzione asincrona per inizializzare i dati
+    initializeData();
   }
 
+  Future<void> initializeData() async {
+    // Ottieni il token
+    String? token = await Security().getToken();
+
+    if (token==null){
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => LoginPage(),
+        ),
+      );
+    }
+
+    // Verifica se il token è presente
+    if (token != null) {
+      // Fai la chiamata HTTP asincrona per ottenere il profilo utente
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8080/all/getUserByToken'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(<String, String>{'token': token}),
+      );
+
+      // Controlla lo status code della risposta
+      if (response.statusCode == 200) {
+        user = GetUserProfile.fromJson(jsonDecode(response.body));
+      } else {
+        print("Errore nella risposta: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Errore nel recupero del profilo!")),
+        );
+      }
+    }
+
+    // Chiama la funzione per caricare gli utenti
+    fetchUsers();
+  }
 
   // Funzione per chiamare l'API e popolare la lista
   Future<void> fetchUsers() async {
     final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/getOutUsers'));
-
-
+      Uri.parse('http://10.0.2.2:8080/all/getOutUsers'),
+    );
 
     if (response.statusCode == 200) {
       List<dynamic> jsonData = jsonDecode(response.body);
@@ -50,9 +97,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        backgroundColor: Theme
-            .of(context)
-            .primaryColor,
+        leading: Container(), // Rimuovi la freccia di default
+        backgroundColor: Theme.of(context).primaryColor,
         title: Row(
           children: [Expanded(child: Center(child: Text(widget.title)))],
         ),
@@ -70,19 +116,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   leading: CircleAvatar(
                     // Se l'immagine dell'utente è vuota, usa l'immagine di default, altrimenti decodifica l'immagine base64
                     backgroundImage:
-                    person.image.isEmpty
-                        ? AssetImage(
-                      "assets/profile_images/default_picture.png",
-                    )
-                        : MemoryImage(base64Decode(person.image))
-                    as ImageProvider, // Usa MemoryImage per le immagini base64
+                        person.image.isEmpty
+                            ? AssetImage(
+                              "assets/profile_images/default_picture.png",
+                            )
+                            : MemoryImage(base64Decode(person.image))
+                                as ImageProvider, // Usa MemoryImage per le immagini base64
                   ),
                   title: Text('${person.name} ${person.surname}'),
                   trailing: IconButton(
                     icon: const Icon(Icons.remove, color: Colors.red),
                     onPressed: () {
                       userIn(
-                          context, person.id); // Chiamata alla funzione con ID
+                        context,
+                        person.id,
+                      ); // Chiamata alla funzione con ID
                     },
                   ),
                 ),
@@ -108,11 +156,15 @@ class _MyHomePageState extends State<MyHomePage> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.blue),
             child: CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage("assets/profile_images/dario.png"),
+              // Se l'immagine dell'utente è vuota, usa l'immagine di default, altrimenti decodifica l'immagine base64
+              backgroundImage:
+                  user.image.isEmpty
+                      ? AssetImage("assets/profile_images/default_picture.png")
+                      : MemoryImage(base64Decode(user.image))
+                          as ImageProvider, // Usa MemoryImage per le immagini base64
             ),
           ),
           ListTile(
@@ -129,12 +181,11 @@ class _MyHomePageState extends State<MyHomePage> {
               Navigator.pop(context);
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => Profile(title: widget.title),
+                  builder: (context) => Profile(title: widget.title, user: user,),
                 ),
               );
             },
           ),
-
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Gestione utenti'),
@@ -146,6 +197,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               );
             },
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout'),
+            onTap: () async {
+              await Security().removeToken();
+              Navigator.pop(context);
+              Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(),
+                  ),
+                );},
           ),
         ],
       ),
@@ -206,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> userOut(BuildContext context, String matricola) async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/userOut'),
+        Uri.parse('http://10.0.2.2:8080/all/userOut'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"id": int.parse(matricola)}),
       );
@@ -231,7 +294,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> userIn(BuildContext context, int id) async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/userIn'),
+        Uri.parse('http://10.0.2.2:8080/all/userIn'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"id": id}),
       );

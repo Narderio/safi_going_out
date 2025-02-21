@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:safi_going_out/security/Security.dart';
 
 import '../model/GetUsers.dart';
 
@@ -26,10 +27,15 @@ class _ManageUsersState extends State<ManageUsers> {
 
   // Funzione per chiamare l'API e popolare la lista
   Future<void> fetchUsers() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8080/getUsers'));
+    String? token = await Security().getToken(); // Recupera il token salvato
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8080/admin/getUsers'),
+      headers: {
+        'Authorization': 'Bearer $token', // Inserisci il token JWT nell'header
+        'Content-Type': 'application/json',
+      },
+    );
 
-    print("Response status: ${response.statusCode}");
-    print("Response body: ${response.body}");
 
     if (response.statusCode == 200) {
       List<dynamic> jsonData = jsonDecode(response.body);
@@ -51,9 +57,13 @@ class _ManageUsersState extends State<ManageUsers> {
     String id,
     String role,
   ) async {
+    String? token = await Security().getToken();
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8080/addUserByAdmin'),
-      headers: {"Content-Type": "application/json"},
+      Uri.parse('http://10.0.2.2:8080/admin/addUserByAdmin'),
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Bearer $token', // Inserisci il token JWT nell'header
+      },
       body: jsonEncode({
         'name': name,
         'surname': surname,
@@ -72,9 +82,13 @@ class _ManageUsersState extends State<ManageUsers> {
   }
 
   Future<void> _removeUser(int id) async {
+    String? token = await Security().getToken();
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8080/deleteUser'),
-      headers: {"Content-Type": "application/json"},
+      Uri.parse('http://10.0.2.2:8080/admin/deleteUser'),
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Bearer $token', // Inserisci il token JWT nell'header
+      },
       body: jsonEncode({"id": id}),
     );
     if (response.statusCode == 200) {

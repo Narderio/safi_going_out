@@ -30,8 +30,8 @@ public class User {
     @Column(nullable = false)
     private Status status;
 
-    //@Column
-    //private String imagePath;
+    @Column(columnDefinition = "LONGTEXT")
+    private String image;
 
     public User(long id, String email, String password, String name, String surname, Role role) {
         this.id = id;

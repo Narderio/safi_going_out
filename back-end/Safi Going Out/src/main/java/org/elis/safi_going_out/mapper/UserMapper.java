@@ -20,6 +20,10 @@ public class UserMapper {
             u1.setSurname(u.getSurname());
             u1.setRole(u.getRole());
             response.add(u1);
+            if(u.getImage()==null)
+                u1.setImage("");
+            else
+                u1.setImage(u.getImage());
         }
         return response;
     }

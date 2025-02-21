@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:safi_going_out/screens/LoginPage.dart';
 
 import 'screens/home_page.dart';
 
@@ -14,7 +15,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: const MyHomePage(title: 'Safi Going Out'),
+      //home: const MyHomePage(title: 'Safi Going Out'),
+      home: LoginPage(),
     );
   }
 }

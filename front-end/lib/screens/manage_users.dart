@@ -115,7 +115,14 @@ class _ManageUsersState extends State<ManageUsers> {
             children: [
               ListTile(
                 leading: CircleAvatar(
-                  backgroundImage: AssetImage(person.imagePath),
+                  // Se l'immagine dell'utente è vuota, usa l'immagine di default, altrimenti decodifica l'immagine base64
+                  backgroundImage:
+                      person.image.isEmpty
+                          ? AssetImage(
+                            "assets/profile_images/default_picture.png",
+                          )
+                          : MemoryImage(base64Decode(person.image))
+                              as ImageProvider, // Usa MemoryImage per le immagini base64
                 ),
                 title: Text('${person.name} ${person.surname} (${person.id})'),
                 subtitle: Text(person.role),
@@ -126,6 +133,7 @@ class _ManageUsersState extends State<ManageUsers> {
                   },
                 ),
               ),
+
               Divider(height: 0),
             ],
           );

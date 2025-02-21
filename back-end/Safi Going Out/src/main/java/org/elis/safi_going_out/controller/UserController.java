@@ -81,5 +81,11 @@ public class UserController {
         return ResponseEntity.ok(b);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<Boolean> login(@Valid @RequestBody LoginRequest request){
+        Boolean b = userService.login(request);
+        return ResponseEntity.ok(b);
+    }
+
 
 }

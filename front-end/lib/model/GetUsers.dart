@@ -4,13 +4,13 @@ class GetUsers {
   final String name;
   final String surname;
   final String role;
-  final String imagePath; // Percorso dell'immagine
+  final String image; // Percorso dell'immagine
 
   GetUsers({
     required this.id,
     required this.name,
     required this.surname,
-    required this.imagePath,
+    required this.image,
     required this.role,
   });
 
@@ -19,7 +19,7 @@ class GetUsers {
     return GetUsers(
       name: json['name'],
       surname: json['surname'],
-      imagePath: "assets/profile_images/dario.png",
+      image: json['image'],
       role: json['role'],
       id: json['id'],
     );

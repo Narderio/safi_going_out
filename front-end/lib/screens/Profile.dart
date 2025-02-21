@@ -1,7 +1,9 @@
 import 'dart:convert';
-import 'dart:convert' as Uint8List;
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:safi_going_out/model/GetUserProfile.dart';
 
 class Profile extends StatefulWidget {
@@ -135,12 +137,38 @@ class _ProfileState extends State<Profile> {
         ],
       ),
       body: Column(
-          children: [
-            if (user.image == "")
-              Image.asset("assets/profile_images/default_picture.png")
-            else
-              Image.memory(Uint8List.base64Decode(user.image)),
-            ListTile(
+        children: [
+          Stack(
+            children: [
+              // Immagine profilo
+              if (user.image.isEmpty)
+                Image.asset("assets/profile_images/default_picture.png")
+              else
+                Image.memory(
+                  base64Decode(user.image),
+                  width: 500, // Imposta una dimensione fissa
+                  height: 500,
+                  fit: BoxFit.cover,
+                ),
+
+              // Pulsante in sovraimpressione
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: IconButton(
+                  icon: Icon(Icons.edit, color: Colors.white),
+                  onPressed: () {
+                    updateImage();
+                    // Qui puoi aprire il selettore di immagini
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(Colors.black54),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          ListTile(
             title: Text(user.name, style: TextStyle(fontSize: 20)),
             subtitle: Text("Nome"),
           ),
@@ -175,6 +203,7 @@ class _ProfileState extends State<Profile> {
 
   Future<void> getUser() async {
     int userId = 3; // ID dell'utente corrente
+    user.id = userId;
     final response = await http.post(
       Uri.parse('http://10.0.2.2:8080/getUserById'),
       headers: <String, String>{
@@ -195,6 +224,33 @@ class _ProfileState extends State<Profile> {
           ),
         ),
       );
+    }
+  }
+
+  Future<void> updateImage() async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      Uint8List imageBytes = await imageFile.readAsBytes(); // Legge i byte dell'immagine
+      String base64Image = base64Encode(imageBytes); // Converte in Base64
+
+      final response = await http.patch(
+        Uri.parse('http://10.0.2.2:8080/updateImage'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'id': user.id,
+          'image': base64Image, // Aggiungi l'immagine codificata in base64
+        }),
+      );
+    if (response.statusCode == 200) {
+      setState(() {
+        user.image = base64Image; // Aggiorna l'immagine dell'utente
+      });
+    }
     }
   }
 }

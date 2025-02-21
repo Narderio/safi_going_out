@@ -1,10 +1,10 @@
 class GetUserProfile {
-  final int id;
+  int id;
   final String name;
   final String surname;
   final String role;
   late final String email;
-  late final image;
+  String image;
 
   GetUserProfile({
     required this.id,

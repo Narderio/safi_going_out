@@ -35,6 +35,10 @@ public class UserServiceImpl implements UserService {
         if(user != null)
             throw new BadRequestException("Utente già registrato");
 
+        User user2 = userRepository.getUserByEmail(request.getEmail());
+        if(user2 != null)
+            throw new BadRequestException("Email già registrata");
+
         User user1 = new User(request.getMatricola(), request.getEmail(), request.getPassword(), request.getName(), request.getSurname(), request.getRole());
         user1.setStatus(Status.IN);
         userRepository.save(user1);
@@ -54,6 +58,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.getUserById(request.getId());
         if(user != null)
             throw new BadRequestException("Utente già registrato");
+
+        User user2 = userRepository.getUserByEmail(request.getEmail());
+        if(user2 != null)
+            throw new BadRequestException("Email già registrata");
 
         String password = "password";
 
@@ -127,6 +135,18 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return true;
     }
+
+    public Boolean login(@Valid LoginRequest request){
+        User user = userRepository.getUserByEmail(request.getEmail());
+        if(user == null)
+            throw new BadRequestException("Utente non trovato");
+
+        if(!user.getPassword().equals(request.getPassword()))
+            throw new BadRequestException("Password errata");
+
+        return true;
+    }
+
 
 
 }

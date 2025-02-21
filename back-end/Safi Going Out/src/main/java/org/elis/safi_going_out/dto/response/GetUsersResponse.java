@@ -10,4 +10,5 @@ public class GetUsersResponse {
     private String name;
     private String surname;
     private Role role;
+    private String image;
 }

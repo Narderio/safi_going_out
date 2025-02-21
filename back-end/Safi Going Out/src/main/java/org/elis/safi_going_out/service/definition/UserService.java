@@ -29,4 +29,6 @@ public interface UserService{
     public Boolean updateEmail(@Valid UpdateEmailRequest request);
 
     public Boolean updateImage(@Valid UpdateImageRequest request);
+
+    public Boolean login(@Valid LoginRequest request);
 }

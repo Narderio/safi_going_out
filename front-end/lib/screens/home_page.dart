@@ -27,10 +27,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // Funzione per chiamare l'API e popolare la lista
   Future<void> fetchUsers() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8080/getOutUsers'));
+    final response = await http.get(
+        Uri.parse('http://10.0.2.2:8080/getOutUsers'));
 
-    print("Response status: ${response.statusCode}");
-    print("Response body: ${response.body}");
+
 
     if (response.statusCode == 200) {
       List<dynamic> jsonData = jsonDecode(response.body);
@@ -50,7 +50,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Theme
+            .of(context)
+            .primaryColor,
         title: Row(
           children: [Expanded(child: Center(child: Text(widget.title)))],
         ),
@@ -66,13 +68,21 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: AssetImage("assets/profile_images/dario.png"),
+                    // Se l'immagine dell'utente è vuota, usa l'immagine di default, altrimenti decodifica l'immagine base64
+                    backgroundImage:
+                    person.image.isEmpty
+                        ? AssetImage(
+                      "assets/profile_images/default_picture.png",
+                    )
+                        : MemoryImage(base64Decode(person.image))
+                    as ImageProvider, // Usa MemoryImage per le immagini base64
                   ),
                   title: Text('${person.name} ${person.surname}'),
                   trailing: IconButton(
                     icon: const Icon(Icons.remove, color: Colors.red),
                     onPressed: () {
-                      //_removeUser(person.id); // Chiamata alla funzione con ID
+                      userIn(
+                          context, person.id); // Chiamata alla funzione con ID
                     },
                   ),
                 ),
@@ -209,6 +219,31 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Errore! Utente non esce!")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Errore di connessione: $e")));
+    }
+  }
+
+  Future<void> userIn(BuildContext context, int id) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8080/userIn'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"id": id}),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Utente rientra correttamente!")),
+        );
+        fetchUsers(); // Ricarica la
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Errore! Utente non rientra!")),
         );
       }
     } catch (e) {

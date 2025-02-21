@@ -1,11 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:safi_going_out/screens/manage_users.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../model/PersonList.dart';
+import '../model/UserList.dart';
 import 'Profile.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -18,26 +16,34 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<PersonList> people = [
-    PersonList(
-      name: "Maria",
-      surname: "Labanca",
-      imagePath: "assets/profile_images/maria.png",
-      status: "Fuori residenza",
-    ),
-    PersonList(
-      name: "Sofia",
-      surname: "Miglionico",
-      imagePath: "assets/profile_images/sofia.png",
-      status: "Fuori residenza",
-    ),
-    PersonList(
-      name: "Nicol",
-      surname: "Goranova",
-      imagePath: "assets/profile_images/nicol.png",
-      status: "Fuori residenza",
-    ),
-  ];
+  List<UserList> users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUsers(); // Chiama l'API all'avvio
+  }
+
+
+  // Funzione per chiamare l'API e popolare la lista
+  Future<void> fetchUsers() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:8080/getOutUsers'));
+
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonData = jsonDecode(response.body);
+      setState(() {
+        users = jsonData.map((e) => UserList.fromJson(e)).toList();
+      });
+    } else {
+      print("Errore nel caricamento dei dati: ${response.statusCode}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Errore nel caricamento dei dati")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,24 +56,31 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       endDrawer: buildDrawer(context),
-      body: ListView.builder(
-        itemCount: people.length,
-        itemBuilder: (context, index) {
-          final person = people[index];
-          return Column(
-            children: [
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: AssetImage(person.imagePath),
+      body: RefreshIndicator(
+        onRefresh: fetchUsers, // Funzione che ricarica la lista
+        child: ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            final person = users[index];
+            return Column(
+              children: [
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: AssetImage("assets/profile_images/dario.png"),
+                  ),
+                  title: Text('${person.name} ${person.surname}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.remove, color: Colors.red),
+                    onPressed: () {
+                      //_removeUser(person.id); // Chiamata alla funzione con ID
+                    },
+                  ),
                 ),
-                title: Text('${person.name} ${person.surname}'),
-                subtitle: Text(person.status),
-                trailing: Icon(Icons.remove),
-              ),
-              Divider(height: 0),
-            ],
-          );
-        },
+                Divider(height: 0),
+              ],
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -192,6 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Utente esce correttamente!")),
         );
+        fetchUsers(); // Ricarica la
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Errore! Utente non esce!")),

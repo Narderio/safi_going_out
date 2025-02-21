@@ -15,29 +15,36 @@ class ManageUsers extends StatefulWidget {
 }
 
 class _ManageUsersState extends State<ManageUsers> {
-  List<GetUsers> people = [];
+  List<GetUsers> users = [];
   Set<String> selectedRole = {'User'}; // Ruolo predefinito in un Set
 
   @override
   void initState() {
     super.initState();
-    fetchPeople(); // Chiama l'API all'avvio
+    fetchUsers(); // Chiama l'API all'avvio
   }
 
   // Funzione per chiamare l'API e popolare la lista
-  Future<void> fetchPeople() async {
+  Future<void> fetchUsers() async {
     final response = await http.get(Uri.parse('http://10.0.2.2:8080/getUsers'));
+
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
+
     if (response.statusCode == 200) {
       List<dynamic> jsonData = jsonDecode(response.body);
       setState(() {
-        people = jsonData.map((e) => GetUsers.fromJson(e)).toList();
+        users = jsonData.map((e) => GetUsers.fromJson(e)).toList();
       });
     } else {
-      throw Exception('Errore nel caricamento dei dati');
+      print("Errore nel caricamento dei dati: ${response.statusCode}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Errore nel caricamento dei dati")),
+      );
     }
   }
 
-  Future<void> addPeople(
+  Future<void> addUser(
     String name,
     String surname,
     String email,
@@ -56,10 +63,25 @@ class _ManageUsersState extends State<ManageUsers> {
       }),
     );
     if (response.statusCode == 200) {
-      fetchPeople(); // Aggiorna la lista
+      fetchUsers(); // Aggiorna la lista
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Errore nell'aggiunta dell'utente")),
+      );
+    }
+  }
+
+  Future<void> _removeUser(int id) async {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8080/deleteUser'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id": id}),
+    );
+    if (response.statusCode == 200) {
+      fetchUsers(); // Aggiorna la lista
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Errore nella rimozione dell'utente")),
       );
     }
   }
@@ -86,9 +108,9 @@ class _ManageUsersState extends State<ManageUsers> {
         ],
       ),
       body: ListView.builder(
-        itemCount: people.length,
+        itemCount: users.length,
         itemBuilder: (context, index) {
-          final person = people[index];
+          final person = users[index];
           return Column(
             children: [
               ListTile(
@@ -97,7 +119,12 @@ class _ManageUsersState extends State<ManageUsers> {
                 ),
                 title: Text('${person.name} ${person.surname} (${person.id})'),
                 subtitle: Text(person.role),
-                trailing: Icon(Icons.remove),
+                trailing: IconButton(
+                  icon: const Icon(Icons.remove, color: Colors.red),
+                  onPressed: () {
+                    _removeUser(person.id); // Chiamata alla funzione con ID
+                  },
+                ),
               ),
               Divider(height: 0),
             ],
@@ -246,7 +273,7 @@ class _ManageUsersState extends State<ManageUsers> {
                                   );
                                   return;
                                 }
-                                addPeople(name, surname, email, id, role);
+                                addUser(name, surname, email, id, role);
                                 Navigator.pop(context);
                               },
                               child: const Text("Conferma"),

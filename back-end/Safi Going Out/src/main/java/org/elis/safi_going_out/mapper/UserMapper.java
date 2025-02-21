@@ -1,6 +1,6 @@
 package org.elis.safi_going_out.mapper;
 
-import lombok.Data;
+import org.elis.safi_going_out.dto.response.GetUserProfile;
 import org.elis.safi_going_out.dto.response.GetUsersResponse;
 import org.elis.safi_going_out.model.User;
 import org.springframework.stereotype.Component;
@@ -24,4 +24,17 @@ public class UserMapper {
         return response;
     }
 
+    public GetUserProfile toGetUserByIdResponse(User user) {
+        GetUserProfile response = new GetUserProfile();
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setSurname(user.getSurname());
+        response.setRole(user.getRole().toString());
+        response.setEmail(user.getEmail());
+        if(user.getImage()==null)
+            response.setImage("");
+        else
+            response.setImage(user.getImage());
+        return response;
+    }
 }

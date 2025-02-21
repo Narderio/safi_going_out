@@ -2,6 +2,7 @@ package org.elis.safi_going_out.service.implementation;
 
 import jakarta.validation.Valid;
 import org.elis.safi_going_out.dto.request.*;
+import org.elis.safi_going_out.dto.response.GetUserProfile;
 import org.elis.safi_going_out.dto.response.GetUsersResponse;
 import org.elis.safi_going_out.handler.BadRequestException;
 import org.elis.safi_going_out.mapper.UserMapper;
@@ -10,7 +11,6 @@ import org.elis.safi_going_out.model.User;
 import org.elis.safi_going_out.repository.UserRepository;
 import org.elis.safi_going_out.service.definition.UserService;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
@@ -99,5 +99,34 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
         return true;
     }
+
+    @Override
+    public GetUserProfile getUserById(Long id){
+        User user = userRepository.getUserById(id);
+        if(user == null)
+            throw new BadRequestException("Utente non trovato");
+        return userMapper.toGetUserByIdResponse(user);
+    }
+
+    public Boolean updateEmail(@Valid UpdateEmailRequest request){
+        User user = userRepository.getUserById(request.getId());
+        if(user == null)
+            throw new BadRequestException("Utente non trovato");
+
+        user.setEmail(request.getEmail());
+        userRepository.save(user);
+        return true;
+    }
+
+    public Boolean updateImage(@Valid UpdateImageRequest request){
+        User user = userRepository.getUserById(request.getId());
+        if(user == null)
+            throw new BadRequestException("Utente non trovato");
+
+        user.setImage(request.getImage());
+        userRepository.save(user);
+        return true;
+    }
+
 
 }

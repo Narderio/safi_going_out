@@ -2,6 +2,7 @@ package org.elis.safi_going_out.controller;
 
 import jakarta.validation.Valid;
 import org.elis.safi_going_out.dto.request.*;
+import org.elis.safi_going_out.dto.response.GetUserProfile;
 import org.elis.safi_going_out.dto.response.GetUsersResponse;
 import org.elis.safi_going_out.model.User;
 import org.elis.safi_going_out.service.definition.UserService;
@@ -61,5 +62,24 @@ public class UserController {
         List<GetUsersResponse> users = userService.getOutUsers();
         return ResponseEntity.ok(users);
     }
+
+    @PostMapping("/getUserById")
+    public ResponseEntity<GetUserProfile> getUserById(@RequestBody GetUserProfileRequest request) {
+        GetUserProfile u = userService.getUserById(request.getId());
+        return ResponseEntity.ok(u);
+    }
+
+    @PatchMapping("/updateEmail")
+    public ResponseEntity<Boolean> updateEmail(@Valid @RequestBody UpdateEmailRequest request){
+        Boolean b = userService.updateEmail(request);
+        return ResponseEntity.ok(b);
+    }
+
+    @PatchMapping("/updateImage")
+    public ResponseEntity<Boolean> updateImage(@Valid @RequestBody UpdateImageRequest request){
+        Boolean b = userService.updateImage(request);
+        return ResponseEntity.ok(b);
+    }
+
 
 }

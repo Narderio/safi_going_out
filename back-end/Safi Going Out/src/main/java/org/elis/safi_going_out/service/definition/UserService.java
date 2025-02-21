@@ -2,6 +2,7 @@ package org.elis.safi_going_out.service.definition;
 
 import jakarta.validation.Valid;
 import org.elis.safi_going_out.dto.request.*;
+import org.elis.safi_going_out.dto.response.GetUserProfile;
 import org.elis.safi_going_out.dto.response.GetUsersResponse;
 import org.elis.safi_going_out.model.User;
 
@@ -22,4 +23,10 @@ public interface UserService{
     public List<GetUsersResponse> getOutUsers();
 
     public Boolean deleteUser(@Valid DeleteUserRequest request);
+
+    public GetUserProfile getUserById(Long id);
+
+    public Boolean updateEmail(@Valid UpdateEmailRequest request);
+
+    public Boolean updateImage(@Valid UpdateImageRequest request);
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.elis.safi_going_out.model.Role;
 
@@ -16,6 +17,7 @@ public class addUserRequest {
     private String email;
 
     @NotBlank(message="Inserire la password")
+    @Size(min=8, message="La password deve essere di almeno 8 caratteri")
     private String password;
 
     @NotBlank(message="Confermare la password")
@@ -30,6 +32,5 @@ public class addUserRequest {
     @Min(value=1, message="Inserire una matricola valida")
     private long matricola;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+
 }

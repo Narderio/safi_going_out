@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:safi_going_out/screens/LoginPage.dart';
 
 import 'screens/home_page.dart';
 

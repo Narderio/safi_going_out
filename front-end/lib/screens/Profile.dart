@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:safi_going_out/model/GetUserProfile.dart';
+import '../security/Security.dart';
 
 class Profile extends StatefulWidget {
   Profile({super.key, required this.title, required this.user});
+
   final String title;
   final GetUserProfile user;
 
@@ -49,7 +51,7 @@ class _ProfileState extends State<Profile> {
             TextButton(
               onPressed: () async {
                 String newEmail =
-                controller.text.trim(); // Rimuove gli spazi bianchi
+                    controller.text.trim(); // Rimuove gli spazi bianchi
 
                 if (newEmail.isEmpty) {
                   Navigator.of(context).pop();
@@ -64,6 +66,7 @@ class _ProfileState extends State<Profile> {
                     Uri.parse('http://10.0.2.2:8080/all/updateEmail'),
                     headers: <String, String>{
                       'Content-Type': 'application/json; charset=UTF-8',
+                      'Authorization': 'Bearer ${await Security().getToken()}',
                     },
                     body: jsonEncode(<String, String>{
                       'id': user.id.toString(), // Converto l'ID in stringa
@@ -195,11 +198,14 @@ class _ProfileState extends State<Profile> {
 
   Future<void> updateImage() async {
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
-      Uint8List imageBytes = await imageFile.readAsBytes(); // Legge i byte dell'immagine
+      Uint8List imageBytes =
+          await imageFile.readAsBytes(); // Legge i byte dell'immagine
       String base64Image = base64Encode(imageBytes); // Converte in Base64
 
       final response = await http.patch(

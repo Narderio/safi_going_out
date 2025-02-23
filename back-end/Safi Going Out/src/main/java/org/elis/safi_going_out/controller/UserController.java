@@ -27,7 +27,7 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
-    @PostMapping("all/addUser")
+    @PostMapping("/addUser")
     public ResponseEntity<User> addUser(@Valid @RequestBody addUserRequest request) {
         User u = userService.addUser(request);
         return ResponseEntity.ok(u);
@@ -88,7 +88,7 @@ public class UserController {
         return ResponseEntity.ok(b);
     }
 
-    @PostMapping("all/login")
+    @PostMapping("/login")
     public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request){
         User u = userService.login(request);
         String token = tokenUtil.generaToken(u);
@@ -97,9 +97,11 @@ public class UserController {
 
     @PostMapping("all/getUserByToken")
     public ResponseEntity<GetUserProfile> getUserByToken(@RequestBody GetUserByToken request){
+        System.out.println(request);
         User u = tokenUtil.getUtenteFromToken(request.getToken());
         System.out.println(u);
         GetUserProfile response = userMapper.toGetUserByIdResponse(u);
+        System.out.println(response);
         return ResponseEntity.ok(response);
     }
 

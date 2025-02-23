@@ -46,7 +46,8 @@ public class GestoreFilterChain {
         httpSecurity.csrf(AbstractHttpConfigurer::disable) // Disabilita la protezione CSRF
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").permitAll() // Permette a tutti di accedere al endpoint /login
-                        .requestMatchers("/all/**").permitAll() // Permette a tutti di accedere agli endpoint /all/**
+                        .requestMatchers("/addUser").permitAll() // Permette a tutti di accedere al endpoint /register
+                        .requestMatchers("/all/**").hasAnyRole(Role.ADMIN.toString(),Role.USER.toString()) // Permette a tutti di accedere agli endpoint /all/**
                         .requestMatchers("/admin/**").hasRole(Role.ADMIN.toString()) // Richiede l'autorizzazione dell'utente con ruolo ADMIN per accedere agli endpoint /admin/**
                         .requestMatchers("/user/**").hasRole(Role.USER.toString()) // Richiede l'autorizzazione dell'utente con ruolo USER per accedere agli endpoint /user/**
                         .anyRequest().permitAll() // Nega tutte le altre richieste

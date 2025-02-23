@@ -33,50 +33,56 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    // Chiama la funzione asincrona per inizializzare i dati
     initializeData();
   }
 
   Future<void> initializeData() async {
-    // Ottieni il token
     String? token = await Security().getToken();
+    print(token);
 
-    if (token==null){
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => LoginPage(),
-        ),
-      );
+    if (token == null) {
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
+      return;
     }
 
-    // Verifica se il token è presente
-    if (token != null) {
-      // Fai la chiamata HTTP asincrona per ottenere il profilo utente
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/all/getUserByToken'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(<String, String>{'token': token}),
-      );
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8080/all/getUserByToken'),
+      headers: {
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+        HttpHeaders.contentTypeHeader: 'application/json',
+      },
+      body: jsonEncode(<String, String>{'token': token}),
+    );
 
-      // Controlla lo status code della risposta
-      if (response.statusCode == 200) {
+    if (response.statusCode == 200) {
+      setState(() {
         user = GetUserProfile.fromJson(jsonDecode(response.body));
-      } else {
-        print("Errore nella risposta: ${response.statusCode}");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Errore nel recupero del profilo!")),
-        );
-      }
+        fetchUsers();
+      });
+    } else {
+      print("Errore nella risposta: ${response.statusCode}");
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
     }
-
-    // Chiama la funzione per caricare gli utenti
-    fetchUsers();
   }
 
-  // Funzione per chiamare l'API e popolare la lista
   Future<void> fetchUsers() async {
+    String? token = await Security().getToken();
+
+    if (token == null) {
+      print("Errore: nessun token disponibile!");
+      return;
+    }
+
     final response = await http.get(
       Uri.parse('http://10.0.2.2:8080/all/getOutUsers'),
+      headers: {
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+        HttpHeaders.contentTypeHeader: 'application/json',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -85,130 +91,145 @@ class _MyHomePageState extends State<MyHomePage> {
         users = jsonData.map((e) => UserList.fromJson(e)).toList();
       });
     } else {
-      print("Errore nel caricamento dei dati: ${response.statusCode}");
+      print("Errore nella risposta: ${response.statusCode}");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Errore nel caricamento dei dati")),
+        SnackBar(content: Text("Errore nel recupero degli utenti!")),
       );
     }
   }
 
+  /// Funzione per gestire il tasto "indietro"
+  Future<bool> _onWillPop() async {
+    return await showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text("Esci dall'app"),
+                content: Text("Sei sicuro di voler uscire?"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text("No"),
+                  ),
+                  TextButton(
+                    onPressed: () => exit(0), // Chiude l'app
+                    child: Text("Sì"),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        leading: Container(), // Rimuovi la freccia di default
-        backgroundColor: Theme.of(context).primaryColor,
-        title: Row(
-          children: [Expanded(child: Center(child: Text(widget.title)))],
+    return WillPopScope(
+      onWillPop: _onWillPop, // Blocca il tasto "indietro" e mostra il dialog
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          leading: Container(),
+          backgroundColor: Theme.of(context).primaryColor,
+          title: Row(
+            children: [Expanded(child: Center(child: Text(widget.title)))],
+          ),
+        ),
+        endDrawer: buildDrawer(context),
+        body: RefreshIndicator(
+          onRefresh: fetchUsers,
+          child: ListView.builder(
+            itemCount: users.length,
+            itemBuilder: (context, index) {
+              final person = users[index];
+              return Column(
+                children: [
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage:
+                          person.image.isEmpty
+                              ? AssetImage(
+                                "assets/profile_images/default_picture.png",
+                              )
+                              : MemoryImage(base64Decode(person.image))
+                                  as ImageProvider,
+                    ),
+                    title: Text('${person.name} ${person.surname}'),
+                    trailing: IconButton(
+                      icon: Icon(Icons.remove, color: Colors.red),
+                      onPressed: () => userIn(context, person.id),
+                    ),
+                  ),
+                  Divider(height: 0),
+                ],
+              );
+            },
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => showAlertDialog(context),
+          tooltip: 'Aggiungi una persona',
+          child: Icon(Icons.add),
         ),
       ),
-      endDrawer: buildDrawer(context),
-      body: RefreshIndicator(
-        onRefresh: fetchUsers, // Funzione che ricarica la lista
-        child: ListView.builder(
-          itemCount: users.length,
-          itemBuilder: (context, index) {
-            final person = users[index];
-            return Column(
-              children: [
-                ListTile(
-                  leading: CircleAvatar(
-                    // Se l'immagine dell'utente è vuota, usa l'immagine di default, altrimenti decodifica l'immagine base64
-                    backgroundImage:
-                        person.image.isEmpty
-                            ? AssetImage(
-                              "assets/profile_images/default_picture.png",
-                            )
-                            : MemoryImage(base64Decode(person.image))
-                                as ImageProvider, // Usa MemoryImage per le immagini base64
-                  ),
-                  title: Text('${person.name} ${person.surname}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.remove, color: Colors.red),
-                    onPressed: () {
-                      userIn(
-                        context,
-                        person.id,
-                      ); // Chiamata alla funzione con ID
-                    },
-                  ),
-                ),
-                Divider(height: 0),
-              ],
-            );
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showAlertDialog(context);
-        },
-        tooltip: 'aggiungi una persona',
-        child: const Icon(Icons.add),
-      ), // Rimuovi la parentesi graffa extra qui
     );
   }
 
-  /// Funzione per creare il Drawer
   Widget buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(color: Colors.blue),
+            decoration: BoxDecoration(color: Colors.blue),
             child: CircleAvatar(
-              // Se l'immagine dell'utente è vuota, usa l'immagine di default, altrimenti decodifica l'immagine base64
               backgroundImage:
                   user.image.isEmpty
                       ? AssetImage("assets/profile_images/default_picture.png")
-                      : MemoryImage(base64Decode(user.image))
-                          as ImageProvider, // Usa MemoryImage per le immagini base64
+                      : MemoryImage(base64Decode(user.image)) as ImageProvider,
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Home'),
-            onTap: () {
-              Navigator.pop(context);
-            },
+            leading: Icon(Icons.home),
+            title: Text('Home'),
+            onTap: () => Navigator.pop(context),
           ),
           ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Profilo'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => Profile(title: widget.title, user: user,),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Gestione utenti'),
+            leading: Icon(Icons.person),
+            title: Text('Profilo'),
             onTap: () {
               Navigator.pop(context);
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => ManageUsers(title: widget.title),
+                  builder:
+                      (context) => Profile(title: widget.title, user: user),
                 ),
               );
             },
           ),
+          // Mostra 'Gestione utenti' solo se il ruolo non è 'USER'
+          if (user.role != 'USER')
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Gestione utenti'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ManageUsers(title: widget.title),
+                  ),
+                );
+              },
+            ),
           ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Logout'),
+            leading: Icon(Icons.logout),
+            title: Text('Logout'),
             onTap: () async {
               await Security().removeToken();
               Navigator.pop(context);
-              Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => LoginPage(),
-                  ),
-                );},
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
           ),
         ],
       ),
@@ -225,9 +246,9 @@ class _MyHomePageState extends State<MyHomePage> {
           title: const Text("Indica la matricola"),
           content: TextField(
             controller: matricolaController,
-            decoration: const InputDecoration(
-              labelText: "Matricola",
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: user.id.toString(),
+              border: const OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
           ),
@@ -267,10 +288,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> userOut(BuildContext context, String matricola) async {
+    print("Matricola: $matricola");
     try {
       final response = await http.post(
         Uri.parse('http://10.0.2.2:8080/all/userOut'),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          HttpHeaders.authorizationHeader:
+              'Bearer ${await Security().getToken()}',
+        },
         body: jsonEncode({"id": int.parse(matricola)}),
       );
 
@@ -295,7 +321,11 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final response = await http.post(
         Uri.parse('http://10.0.2.2:8080/all/userIn'),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          HttpHeaders.authorizationHeader:
+              'Bearer ${await Security().getToken()}',
+        },
         body: jsonEncode({"id": id}),
       );
 

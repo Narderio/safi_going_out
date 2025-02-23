@@ -6,6 +6,7 @@ import org.elis.safi_going_out.dto.response.GetUserProfile;
 import org.elis.safi_going_out.dto.response.GetUsersResponse;
 import org.elis.safi_going_out.handler.BadRequestException;
 import org.elis.safi_going_out.mapper.UserMapper;
+import org.elis.safi_going_out.model.Role;
 import org.elis.safi_going_out.model.Status;
 import org.elis.safi_going_out.model.User;
 import org.elis.safi_going_out.repository.UserRepository;
@@ -40,7 +41,7 @@ public class UserServiceImpl implements UserService {
         if(user2.isPresent())
             throw new BadRequestException("Email già registrata");
 
-        User user1 = new User(request.getMatricola(), request.getEmail(), request.getPassword(), request.getName(), request.getSurname(), request.getRole());
+        User user1 = new User(request.getMatricola(), request.getEmail(), request.getPassword(), request.getName(), request.getSurname(), Role.USER);
         user1.setStatus(Status.IN);
         userRepository.save(user1);
 
@@ -121,6 +122,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.getUserById(request.getId());
         if(user == null)
             throw new BadRequestException("Utente non trovato");
+        if(userRepository.getUserByEmail(request.getEmail()).isPresent())
+            throw new BadRequestException("Email già registrata");
 
         user.setEmail(request.getEmail());
         userRepository.save(user);
@@ -152,7 +155,6 @@ public class UserServiceImpl implements UserService {
         Optional<User> user = userRepository.getUserByEmail(email);
         if(user.isEmpty())
             throw new BadRequestException("Utente non trovato");
-
         return user.get();
     }
 

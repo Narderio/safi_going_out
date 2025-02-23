@@ -1,9 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:safi_going_out/security/Security.dart';
-
 import '../model/GetUsers.dart';
 
 class ManageUsers extends StatefulWidget {
@@ -36,16 +34,18 @@ class _ManageUsersState extends State<ManageUsers> {
       },
     );
 
-
     if (response.statusCode == 200) {
       List<dynamic> jsonData = jsonDecode(response.body);
       setState(() {
         users = jsonData.map((e) => GetUsers.fromJson(e)).toList();
       });
     } else {
-      print("Errore nel caricamento dei dati: ${response.statusCode}");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Errore nel caricamento dei dati")),
+        SnackBar(
+          content: Text("Errore: ${response.body}"),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
       );
     }
   }

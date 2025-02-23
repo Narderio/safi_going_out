@@ -158,6 +158,24 @@ public class UserServiceImpl implements UserService {
         return user.get();
     }
 
+    public Boolean updatePassword(@Valid UpdatePasswordRequest request){
+        User user = userRepository.getUserById(request.getId());
+        if(user == null)
+            throw new BadRequestException("Utente non trovato");
+
+        if(!request.getNewPassword().equals(request.getConfirmPassword()))
+            throw new BadRequestException("Le password non coincidono");
+
+        if(!user.getPassword().equals(request.getOldPassword()))
+            throw new BadRequestException("Password errata");
+
+        user.setPassword(request.getNewPassword());
+        userRepository.save(user);
+        return true;
+    }
+
+
+
 
 
 }

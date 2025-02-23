@@ -11,8 +11,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _matricolaController = TextEditingController();
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _cognomeController = TextEditingController();

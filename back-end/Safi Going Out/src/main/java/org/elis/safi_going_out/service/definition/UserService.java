@@ -33,4 +33,6 @@ public interface UserService{
     public User login(@Valid LoginRequest request);
 
     public User getUserByEmail(String email);
+
+    public Boolean updatePassword(@Valid UpdatePasswordRequest request);
 }

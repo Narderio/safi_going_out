@@ -106,4 +106,10 @@ public class UserController {
     }
 
 
+    @PatchMapping("all/updatePassword")
+    public ResponseEntity<Boolean> updatePassword(@Valid @RequestBody UpdatePasswordRequest request){
+        Boolean b = userService.updatePassword(request);
+        return ResponseEntity.ok(b);
+    }
+
 }

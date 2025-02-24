@@ -10,21 +10,29 @@ import org.elis.safi_going_out.model.Role;
 import org.elis.safi_going_out.model.Status;
 import org.elis.safi_going_out.model.User;
 import org.elis.safi_going_out.repository.UserRepository;
+import org.elis.safi_going_out.service.definition.MailSenderService;
 import org.elis.safi_going_out.service.definition.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final MailSenderService mailService;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder, MailSenderService mailService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.mailService = mailService;
     }
 
     @Override
@@ -65,11 +73,20 @@ public class UserServiceImpl implements UserService {
         if(user2.isPresent())
             throw new BadRequestException("Email già registrata");
 
-        String password = "password";
+        String uuid = UUID.randomUUID().toString();
+        String passwordGenerata = uuid.replace("-", "").substring(0, 12);
 
-        User user1 = new User(request.getId(), request.getEmail(), password, request.getName(), request.getSurname(), request.getRole());
+        //TODO password encoder
+        String passwordGenerataHashata = passwordEncoder.encode(passwordGenerata);
+
+
+
+        User user1 = new User(request.getId(), request.getEmail(), passwordGenerata, request.getName(), request.getSurname(), request.getRole());
         user1.setStatus(Status.IN);
         userRepository.save(user1);
+
+        mailService.addUser(user1);
+
         return user1;
     }
 

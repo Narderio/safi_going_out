@@ -23,6 +23,8 @@ public class MailSenderServiceImpl implements MailSenderService {
         this.sender = sender;
     }
 
+
+
     @Override
     @Async
     public void inviaMessaggio(EmailDTO emailDTO) {
@@ -35,7 +37,6 @@ public class MailSenderServiceImpl implements MailSenderService {
     }
 
     @Override
-    @Async
     public void addUser(User u){
         String mailText= "Benvenuto "+u.getName()+" "+u.getSurname()+"\n"
                 + "La tua email è: "+u.getEmail()+"\n"
@@ -47,7 +48,7 @@ public class MailSenderServiceImpl implements MailSenderService {
             emailDTO.setTesto(mailText);
             inviaMessaggio(emailDTO);
         } catch (Exception e) {
-            System.out.println("Errore nell'invio della mail");
+            throw new RuntimeException("Errore nell'invio della mail");
         }
     }
 

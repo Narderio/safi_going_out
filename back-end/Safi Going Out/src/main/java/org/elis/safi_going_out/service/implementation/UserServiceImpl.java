@@ -73,21 +73,27 @@ public class UserServiceImpl implements UserService {
         if(user2.isPresent())
             throw new BadRequestException("Email già registrata");
 
-        String uuid = UUID.randomUUID().toString();
-        String passwordGenerata = uuid.replace("-", "").substring(0, 12);
+        try {
+            String uuid = UUID.randomUUID().toString();
+            String passwordGenerata = uuid.replace("-", "").substring(0, 12);
 
-        //TODO password encoder
-        String passwordGenerataHashata = passwordEncoder.encode(passwordGenerata);
+            //TODO password encoder
+            String passwordGenerataHashata = passwordEncoder.encode(passwordGenerata);
 
 
 
-        User user1 = new User(request.getId(), request.getEmail(), passwordGenerata, request.getName(), request.getSurname(), request.getRole());
-        user1.setStatus(Status.IN);
-        userRepository.save(user1);
+            User user1 = new User(request.getId(), request.getEmail(), passwordGenerata, request.getName(), request.getSurname(), request.getRole());
+            user1.setStatus(Status.IN);
+            mailService.addUser(user1);
+            userRepository.save(user1);
 
-        mailService.addUser(user1);
+            return user1;
+        }
+        catch(Exception e){
+            throw new BadRequestException("Errore nell'invio della mail");
+        }
 
-        return user1;
+
     }
 
     public boolean UserOut(@Valid UserOutRequest request){

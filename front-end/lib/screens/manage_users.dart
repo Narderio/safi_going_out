@@ -76,7 +76,7 @@ class _ManageUsersState extends State<ManageUsers> {
       fetchUsers(); // Aggiorna la lista
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Errore nell'aggiunta dell'utente")),
+        SnackBar(content: Text(response.body.toString())),
       );
     }
   }
@@ -160,6 +160,24 @@ class _ManageUsersState extends State<ManageUsers> {
         tooltip: 'Registra una persona',
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              const Text("Registrazione in corso..."),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -249,7 +267,7 @@ class _ManageUsersState extends State<ManageUsers> {
                           TextField(
                             controller: idController,
                             decoration: const InputDecoration(
-                              labelText: "ID",
+                              labelText: "Matricola",
                               border: OutlineInputBorder(),
                             ),
                             keyboardType: TextInputType.number,
@@ -295,8 +313,19 @@ class _ManageUsersState extends State<ManageUsers> {
                                   );
                                   return;
                                 }
-                                addUser(name, surname, email, id, role);
-                                Navigator.pop(context);
+
+                                _showLoadingDialog(context);
+
+                                addUser(name, surname, email, id, role).then((
+                                  _,
+                                ) {
+                                  Navigator.pop(
+                                    context,
+                                  ); // Close the loading dialog
+                                  Navigator.pop(
+                                    context,
+                                  ); // Close the bottom sheet
+                                });
                               },
                               child: const Text("Conferma"),
                             ),

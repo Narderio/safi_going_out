@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../config.dart'; // Importa il file di configurazione
 
 class RegistrationPage extends StatefulWidget {
   @override
@@ -11,7 +12,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _matricolaController = TextEditingController();
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _cognomeController = TextEditingController();
@@ -26,7 +28,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       String confirmPassword = _confirmPasswordController.text;
 
       // Verifica se le password corrispondono
-      if (password != _confirmPasswordController.text) {
+      if (password != confirmPassword) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Le password non corrispondono!"),
@@ -37,9 +39,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
         return;
       }
 
+      print('${ApiConfig}addUser');
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/addUser'),
-        // Cambia l'URL con quello del tuo server
+
+        Uri.parse(ApiConfig.addUserEndpoint),
+        // Usa l'endpoint da ApiConfig
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

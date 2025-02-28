@@ -12,4 +12,5 @@ public interface MailSenderService {
 
     void addUser(User u);
 
+    public void forgotPassword(User user, String passwordGenerata);
 }

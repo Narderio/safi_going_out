@@ -52,6 +52,22 @@ public class MailSenderServiceImpl implements MailSenderService {
         }
     }
 
+    @Override
+    @Async
+    public void forgotPassword(User user, String passwordGenerata){
+        String mailText= "Ciao "+user.getName()+" "+user.getSurname()+"\n"
+                + "La tua nuova password è: " + passwordGenerata;
+        try {
+            EmailDTO emailDTO = new EmailDTO();
+            emailDTO.setDestinatario(List.of(user.getEmail()));
+            emailDTO.setOggetto("Password dimenticata");
+            emailDTO.setTesto(mailText);
+            inviaMessaggio(emailDTO);
+        } catch (Exception e) {
+            throw new RuntimeException("Errore nell'invio della mail");
+        }
+    }
+
 
 
 

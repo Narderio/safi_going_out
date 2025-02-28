@@ -1,8 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:safi_going_out/security/Security.dart';
+import '../model/GetUserProfile.dart';
 import '../model/GetUsers.dart';
+import '../config.dart';
+import 'LoginPage.dart'; // Importa il file di configurazione
 
 class ManageUsers extends StatefulWidget {
   const ManageUsers({super.key, required this.title});
@@ -16,18 +20,62 @@ class ManageUsers extends StatefulWidget {
 class _ManageUsersState extends State<ManageUsers> {
   List<GetUsers> users = [];
   Set<String> selectedRole = {'User'}; // Ruolo predefinito in un Set
+  GetUserProfile user = GetUserProfile(
+    id: 0,
+    name: '',
+    surname: '',
+    email: '',
+    role: '',
+    image: '',
+  );
+
 
   @override
   void initState() {
     super.initState();
-    fetchUsers(); // Chiama l'API all'avvio
+    initializeData(); // Chiama l'API all'avvio
+  }
+
+  Future<void> initializeData() async {
+    String? token = await Security().getToken();
+    print(token);
+
+    if (token == null) {
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
+      return;
+    }
+
+    final response = await http.post(
+      Uri.parse('${ApiConfig.allEndpoint}getUserByToken'),
+      // Usa l'endpoint da ApiConfig
+      headers: {
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+        HttpHeaders.contentTypeHeader: 'application/json',
+      },
+      body: jsonEncode({'token': token}),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        user = GetUserProfile.fromJson(jsonDecode(response.body));
+        fetchUsers();
+      });
+    } else {
+      print("Errore nella risposta: ${response.statusCode}");
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
+    }
   }
 
   // Funzione per chiamare l'API e popolare la lista
   Future<void> fetchUsers() async {
     String? token = await Security().getToken(); // Recupera il token salvato
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8080/admin/getUsers'),
+      Uri.parse('${ApiConfig.adminEndpoint}getUsers'),
+      // Usa l'endpoint da ApiConfig
       headers: {
         'Authorization': 'Bearer $token', // Inserisci il token JWT nell'header
         'Content-Type': 'application/json',
@@ -35,7 +83,7 @@ class _ManageUsersState extends State<ManageUsers> {
     );
 
     if (response.statusCode == 200) {
-      List<dynamic> jsonData = jsonDecode(response.body);
+      List jsonData = jsonDecode(response.body);
       setState(() {
         users = jsonData.map((e) => GetUsers.fromJson(e)).toList();
       });
@@ -59,7 +107,8 @@ class _ManageUsersState extends State<ManageUsers> {
   ) async {
     String? token = await Security().getToken();
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8080/admin/addUserByAdmin'),
+      Uri.parse('${ApiConfig.adminEndpoint}addUserByAdmin'),
+      // Usa l'endpoint da ApiConfig
       headers: {
         "Content-Type": "application/json",
         'Authorization': 'Bearer $token', // Inserisci il token JWT nell'header
@@ -75,23 +124,28 @@ class _ManageUsersState extends State<ManageUsers> {
     if (response.statusCode == 200) {
       fetchUsers(); // Aggiorna la lista
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response.body.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(response.body.toString())));
     }
   }
 
   Future<void> _removeUser(int id) async {
     String? token = await Security().getToken();
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8080/admin/deleteUser'),
+      Uri.parse('${ApiConfig.adminEndpoint}deleteUser'),
+      // Usa l'endpoint da ApiConfig
       headers: {
         "Content-Type": "application/json",
         'Authorization': 'Bearer $token', // Inserisci il token JWT nell'header
       },
       body: jsonEncode({"id": id}),
     );
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 && user.id == id) {
+      Security().removeToken();
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
+    }
+    else if (response.statusCode == 200) {
       fetchUsers(); // Aggiorna la lista
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -143,11 +197,10 @@ class _ManageUsersState extends State<ManageUsers> {
                 trailing: IconButton(
                   icon: const Icon(Icons.remove, color: Colors.red),
                   onPressed: () {
-                    _removeUser(person.id); // Chiamata alla funzione con ID
+                    _removeUser(person.id); // Chiama alla funzione con ID
                   },
                 ),
               ),
-
               Divider(height: 0),
             ],
           );
@@ -273,13 +326,10 @@ class _ManageUsersState extends State<ManageUsers> {
                             keyboardType: TextInputType.number,
                           ),
                           const SizedBox(height: 10),
-                          SegmentedButton<String>(
-                            segments: const <ButtonSegment<String>>[
-                              ButtonSegment<String>(
-                                value: 'User',
-                                label: Text('User'),
-                              ),
-                              ButtonSegment<String>(
+                          SegmentedButton(
+                            segments: const [
+                              ButtonSegment(value: 'User', label: Text('User')),
+                              ButtonSegment(
                                 value: 'Admin',
                                 label: Text('Admin'),
                               ),
@@ -321,10 +371,10 @@ class _ManageUsersState extends State<ManageUsers> {
                                 ) {
                                   Navigator.pop(
                                     context,
-                                  ); // Close the loading dialog
+                                  ); // Chiudi il loading dialog
                                   Navigator.pop(
                                     context,
-                                  ); // Close the bottom sheet
+                                  ); // Chiudi il bottom sheet
                                 });
                               },
                               child: const Text("Conferma"),

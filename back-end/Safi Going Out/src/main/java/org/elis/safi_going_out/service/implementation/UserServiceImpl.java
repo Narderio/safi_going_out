@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,15 +39,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addUser(addUserRequest request) {
 
-        if(!request.getPassword().equals(request.getConfirmPassword()))
+        if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new BadRequestException("Le password non coincidono");
 
         User user = userRepository.getUserById(request.getMatricola());
-        if(user != null)
+        if (user != null)
             throw new BadRequestException("Utente già registrato");
 
         Optional<User> user2 = userRepository.getUserByEmail(request.getEmail());
-        if(user2.isPresent())
+        if (user2.isPresent())
             throw new BadRequestException("Email già registrata");
 
         User user1 = new User(request.getMatricola(), request.getEmail(), request.getPassword(), request.getName(), request.getSurname(), Role.USER);
@@ -58,7 +59,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<GetUsersResponse> getUsers() {
-        List<User> users= userRepository.findAll();
+        List<User> users = userRepository.findAll();
         List<GetUsersResponse> response = userMapper.toGetUsersResponse(users);
         return response;
     }
@@ -66,11 +67,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addUserByAdmin(addUserByAdminRequest request) {
         User user = userRepository.getUserById(request.getId());
-        if(user != null)
+        if (user != null)
             throw new BadRequestException("Utente già registrato");
 
         Optional<User> user2 = userRepository.getUserByEmail(request.getEmail());
-        if(user2.isPresent())
+        if (user2.isPresent())
             throw new BadRequestException("Email già registrata");
 
         try {
@@ -81,25 +82,23 @@ public class UserServiceImpl implements UserService {
             String passwordGenerataHashata = passwordEncoder.encode(passwordGenerata);
 
 
-
             User user1 = new User(request.getId(), request.getEmail(), passwordGenerata, request.getName(), request.getSurname(), request.getRole());
             user1.setStatus(Status.IN);
             mailService.addUser(user1);
             userRepository.save(user1);
 
             return user1;
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             throw new BadRequestException("Errore nell'invio della mail");
         }
 
 
     }
 
-    public boolean UserOut(@Valid UserOutRequest request){
+    public boolean UserOut(@Valid UserOutRequest request) {
 
         User user = userRepository.getUserById(request.getId());
-        if(user == null)
+        if (user == null)
             throw new BadRequestException("Utente non trovato");
 
         user.setStatus(Status.OUT);
@@ -107,9 +106,9 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-    public boolean UserIn(@Valid UserInRequest request){
+    public boolean UserIn(@Valid UserInRequest request) {
         User user = userRepository.getUserById(request.getId());
-        if(user == null)
+        if (user == null)
             throw new BadRequestException("Utente non trovato");
 
         user.setStatus(Status.IN);
@@ -119,14 +118,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<GetUsersResponse> getOutUsers() {
-        List<User> users= userRepository.findAllByStatus(Status.OUT);
+        List<User> users = userRepository.findAllByStatus(Status.OUT);
         return userMapper.toGetUsersResponse(users);
     }
 
     @Override
-    public Boolean deleteUser(@Valid DeleteUserRequest request){
+    public Boolean deleteUser(@Valid DeleteUserRequest request) {
         User user = userRepository.getUserById(request.getId());
-        if(user == null)
+        if (user == null)
             throw new BadRequestException("Utente non trovato");
 
         userRepository.delete(user);
@@ -134,18 +133,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public GetUserProfile getUserById(Long id){
+    public GetUserProfile getUserById(Long id) {
         User user = userRepository.getUserById(id);
-        if(user == null)
+        if (user == null)
             throw new BadRequestException("Utente non trovato");
         return userMapper.toGetUserByIdResponse(user);
     }
 
-    public Boolean updateEmail(@Valid UpdateEmailRequest request){
+    public Boolean updateEmail(@Valid UpdateEmailRequest request) {
         User user = userRepository.getUserById(request.getId());
-        if(user == null)
+        if (user == null)
             throw new BadRequestException("Utente non trovato");
-        if(userRepository.getUserByEmail(request.getEmail()).isPresent())
+        if (userRepository.getUserByEmail(request.getEmail()).isPresent())
             throw new BadRequestException("Email già registrata");
 
         user.setEmail(request.getEmail());
@@ -153,9 +152,9 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-    public Boolean updateImage(@Valid UpdateImageRequest request){
+    public Boolean updateImage(@Valid UpdateImageRequest request) {
         User user = userRepository.getUserById(request.getId());
-        if(user == null)
+        if (user == null)
             throw new BadRequestException("Utente non trovato");
 
         user.setImage(request.getImage());
@@ -163,33 +162,33 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-    public User login(@Valid LoginRequest request){
+    public User login(@Valid LoginRequest request) {
         Optional<User> user = userRepository.getUserByEmail(request.getEmail());
-        if(user.isEmpty())
+        if (user.isEmpty())
             throw new BadRequestException("Utente non trovato");
 
-        if(!user.get().getPassword().equals(request.getPassword()))
+        if (!user.get().getPassword().equals(request.getPassword()))
             throw new BadRequestException("Password errata");
 
         return user.get();
     }
 
-    public User getUserByEmail(String email){
+    public User getUserByEmail(String email) {
         Optional<User> user = userRepository.getUserByEmail(email);
-        if(user.isEmpty())
+        if (user.isEmpty())
             throw new BadRequestException("Utente non trovato");
         return user.get();
     }
 
-    public Boolean updatePassword(@Valid UpdatePasswordRequest request){
+    public Boolean updatePassword(@Valid UpdatePasswordRequest request) {
         User user = userRepository.getUserById(request.getId());
-        if(user == null)
+        if (user == null)
             throw new BadRequestException("Utente non trovato");
 
-        if(!request.getNewPassword().equals(request.getConfirmPassword()))
+        if (!request.getNewPassword().equals(request.getConfirmPassword()))
             throw new BadRequestException("Le password non coincidono");
 
-        if(!user.getPassword().equals(request.getOldPassword()))
+        if (!user.getPassword().equals(request.getOldPassword()))
             throw new BadRequestException("Password errata");
 
         user.setPassword(request.getNewPassword());
@@ -197,8 +196,28 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
+    public Boolean forgotPassword(ForgotPasswordRequest request) {
+        Optional<User> user = userRepository.getUserByEmail(request.getEmail());
+        if (user.isEmpty())
+            throw new BadRequestException("Utente non trovato");
 
+        String uuid = UUID.randomUUID().toString();
+        String passwordGenerata = uuid.replace("-", "").substring(0, 12);
 
+        //TODO password encoder
+        String passwordGenerataHashata = passwordEncoder.encode(passwordGenerata);
+
+        user.get().setPassword(passwordGenerataHashata);
+
+        try {
+            mailService.forgotPassword(user.get(), passwordGenerata);
+            userRepository.save(user.get());
+        } catch (Exception e) {
+            throw new BadRequestException("Errore nell'invio della mail");
+        }
+
+        return true;
+    }
 
 
 }

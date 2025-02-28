@@ -112,4 +112,11 @@ public class UserController {
         return ResponseEntity.ok(b);
     }
 
+
+    @PostMapping("forgotPassword")
+    public ResponseEntity<Boolean> forgotPassword(@RequestBody ForgotPasswordRequest request){
+        Boolean b = userService.forgotPassword(request);
+        return ResponseEntity.ok(b);
+    }
+
 }

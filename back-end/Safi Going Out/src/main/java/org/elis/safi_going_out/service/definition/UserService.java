@@ -35,4 +35,6 @@ public interface UserService{
     public User getUserByEmail(String email);
 
     public Boolean updatePassword(@Valid UpdatePasswordRequest request);
+
+    public Boolean forgotPassword(ForgotPasswordRequest request);
 }

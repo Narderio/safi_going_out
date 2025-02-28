@@ -9,6 +9,7 @@ import 'package:safi_going_out/screens/manage_users.dart';
 import '../model/UserList.dart';
 import '../security/Security.dart';
 import 'Profile.dart';
+import '../config.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -48,12 +49,13 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8080/all/getUserByToken'),
+      Uri.parse('${ApiConfig.allEndpoint}getUserByToken'),
+      // Usa l'endpoint da ApiConfig
       headers: {
         HttpHeaders.authorizationHeader: 'Bearer $token',
         HttpHeaders.contentTypeHeader: 'application/json',
       },
-      body: jsonEncode(<String, String>{'token': token}),
+      body: jsonEncode({'token': token}),
     );
 
     if (response.statusCode == 200) {
@@ -78,7 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8080/all/getOutUsers'),
+      Uri.parse('${ApiConfig.allEndpoint}getOutUsers'),
+      // Usa l'endpoint da ApiConfig
       headers: {
         HttpHeaders.authorizationHeader: 'Bearer $token',
         HttpHeaders.contentTypeHeader: 'application/json',
@@ -86,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     if (response.statusCode == 200) {
-      List<dynamic> jsonData = jsonDecode(response.body);
+      List jsonData = jsonDecode(response.body);
       setState(() {
         users = jsonData.map((e) => UserList.fromJson(e)).toList();
       });
@@ -291,7 +294,8 @@ class _MyHomePageState extends State<MyHomePage> {
     print("Matricola: $matricola");
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/all/userOut'),
+        Uri.parse('${ApiConfig.allEndpoint}userOut'),
+        // Usa l'endpoint da ApiConfig
         headers: {
           "Content-Type": "application/json",
           HttpHeaders.authorizationHeader:
@@ -304,7 +308,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Utente esce correttamente!")),
         );
-        fetchUsers(); // Ricarica la
+        fetchUsers(); // Ricarica la lista
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Errore! Utente non esce!")),
@@ -320,7 +324,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> userIn(BuildContext context, int id) async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/all/userIn'),
+        Uri.parse('${ApiConfig.allEndpoint}userIn'),
+        // Usa l'endpoint da ApiConfig
         headers: {
           "Content-Type": "application/json",
           HttpHeaders.authorizationHeader:
@@ -333,7 +338,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Utente rientra correttamente!")),
         );
-        fetchUsers(); // Ricarica la
+        fetchUsers(); // Ricarica la lista
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Errore! Utente non rientra!")),

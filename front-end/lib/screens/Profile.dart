@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:safi_going_out/model/GetUserProfile.dart';
 import '../security/Security.dart';
+import '../config.dart'; // Importa il file di configurazione
 
 class Profile extends StatefulWidget {
   Profile({super.key, required this.title, required this.user});
@@ -41,7 +42,7 @@ class _ProfileState extends State<Profile> {
               hintText: "Inserisci la nuova email",
             ),
           ),
-          actions: <Widget>[
+          actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Chiudi il dialogo
@@ -50,8 +51,7 @@ class _ProfileState extends State<Profile> {
             ),
             TextButton(
               onPressed: () async {
-                String newEmail =
-                controller.text.trim(); // Rimuove gli spazi bianchi
+                String newEmail = controller.text.trim(); // Rimuove gli spazi bianchi
 
                 if (newEmail.isEmpty) {
                   Navigator.of(context).pop();
@@ -63,12 +63,12 @@ class _ProfileState extends State<Profile> {
 
                 try {
                   final response = await http.patch(
-                    Uri.parse('http://10.0.2.2:8080/all/updateEmail'),
-                    headers: <String, String>{
+                    Uri.parse('${ApiConfig.allEndpoint}updateEmail'), // Usa l'endpoint da ApiConfig
+                    headers: {
                       'Content-Type': 'application/json; charset=UTF-8',
                       'Authorization': 'Bearer ${await Security().getToken()}',
                     },
-                    body: jsonEncode(<String, String>{
+                    body: jsonEncode({
                       'id': user.id.toString(), // Converto l'ID in stringa
                       'email': newEmail, // Invio la nuova email
                     }),
@@ -108,7 +108,6 @@ class _ProfileState extends State<Profile> {
       },
     );
   }
-
 
   // Funzione per mostrare il dialogo di modifica della password
   void _editPassword() {
@@ -152,7 +151,7 @@ class _ProfileState extends State<Profile> {
               ),
             ],
           ),
-          actions: <Widget>[
+          actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Chiudi il dialogo
@@ -183,12 +182,12 @@ class _ProfileState extends State<Profile> {
 
                 try {
                   final response = await http.patch(
-                    Uri.parse('http://10.0.2.2:8080/all/updatePassword'),
-                    headers: <String, String>{
+                    Uri.parse('${ApiConfig.allEndpoint}updatePassword'), // Usa l'endpoint da ApiConfig
+                    headers: {
                       'Content-Type': 'application/json; charset=UTF-8',
                       'Authorization': 'Bearer ${await Security().getToken()}',
                     },
-                    body: jsonEncode(<String, String>{
+                    body: jsonEncode({
                       'id': user.id.toString(),
                       'oldPassword': oldPassword,
                       'newPassword': newPassword,
@@ -220,7 +219,6 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     // Ottieni l'altezza dello schermo
@@ -238,9 +236,7 @@ class _ProfileState extends State<Profile> {
           IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              Navigator.of(
-                context,
-              ).pop(); // Torna indietro alla schermata precedente
+              Navigator.of(context).pop(); // Torna indietro alla schermata precedente
             },
           ),
         ],
@@ -329,16 +325,15 @@ class _ProfileState extends State<Profile> {
 
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
-      Uint8List imageBytes =
-      await imageFile.readAsBytes(); // Legge i byte dell'immagine
+      Uint8List imageBytes = await imageFile.readAsBytes(); // Legge i byte dell'immagine
       String base64Image = base64Encode(imageBytes); // Converte in Base64
 
       final response = await http.patch(
-        Uri.parse('http://10.0.2.2:8080/all/updateImage'),
-        headers: <String, String>{
+        Uri.parse('${ApiConfig.allEndpoint}updateImage'), // Usa l'endpoint da ApiConfig
+        headers: {
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode(<String, dynamic>{
+        body: jsonEncode({
           'id': user.id,
           'image': base64Image, // Aggiungi l'immagine codificata in base64
         }),

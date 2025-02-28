@@ -12,7 +12,7 @@ class ApiConfig {
       case Environment.phisic:
         return 'http://192.168.1.13:8080'; // phisic
       case Environment.production:
-        return 'https://api.example.com/api'; // Produzione
+        return 'https://3f7b-37-182-179-83.ngrok-free.app'; // Produzione
     }
   }
 

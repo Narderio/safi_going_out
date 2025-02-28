@@ -207,7 +207,7 @@ public class UserServiceImpl implements UserService {
         //TODO password encoder
         String passwordGenerataHashata = passwordEncoder.encode(passwordGenerata);
 
-        user.get().setPassword(passwordGenerataHashata);
+        user.get().setPassword(passwordGenerata);
 
         try {
             mailService.forgotPassword(user.get(), passwordGenerata);
